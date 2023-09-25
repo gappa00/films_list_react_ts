@@ -2,13 +2,13 @@ import React from "react";
 import { Interface } from "readline";
 import { films } from "../../data/films";
 
-interface Ganre {
+interface Genre {
     name: string,
     id: number
 } 
 
 export function Filter() {
-    const ganres: Ganre[] = [
+    const genres: Genre[] = [
         {
             "name" : "test",
             "id" : 1
@@ -18,7 +18,7 @@ export function Filter() {
         <form>
             <input id="name" placeholder="Film name"/>
             <select>
-                {ganres.map(ganre => <option key={ganre.id}>{ganre.name}</option>) }
+                {genres.map(genre => <option key={genre.id}>{genre.name}</option>) }
             </select>
             <div>
                 Rating

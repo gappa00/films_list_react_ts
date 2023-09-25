@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 // import { IFilm } from './models';
 import { films } from './data/films';
 import { IFilm } from './models';
-
+import { Genre } from './models';
 
 const options = {
   method: 'GET',
@@ -14,11 +14,6 @@ const options = {
   }
 };
 
-interface Ganre {
-  name: string,
-  id: number
-} 
-
 interface FormProps {
   onSubmit: (data: FormData) => void;
 }
@@ -26,28 +21,29 @@ interface FormProps {
 interface FormData {
   title: string
   rate: number
-  rateTo: number
   year: number
-  yearTo: number
+  genre: number
 }
 
 function App(/*{ onSubmit }: FormProps*/) {
-  const minRate = 0;
-  const maxRate = 10;
-  const minYear = 0;
-  const today = new Date();
-  const maxYear = today.getFullYear();
+  const minRate = 0
+  const maxRate = 10
+  const minYear = 0
+  const today = new Date()
+  const getTodayYear = today.toLocaleString("default", { year: "numeric" })
 
-  const [formData, setFormData] = React.useState<FormData>({ title: '', rate: 0, rateTo: 0, year: 0, yearTo: 0 });
+  const [formData, setFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 });
   const [filmsList, setFilms] = useState<IFilm[]>([])
   const [filmBlock, setFilmBlock] = useState<IFilm[]>()
+  const [genres, setGenres] = useState<Genre[]>([])
 
   useEffect(() => {
-    // fetch('https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=10&primary_release_year=2022&sort_by=primary_release_date.desc', options)
-    // .then(response => response.json())
-    // .then(response => setFilms(response.results))
-    // .catch(err => console.error(err));
     
+    fetch('https://api.themoviedb.org/3/genre/movie/list', options)
+    .then(response => response.json())
+    .then(response => setGenres(response.genres))
+    .catch(err => console.error(err));
+
   }, []);
 
   
@@ -67,7 +63,7 @@ function App(/*{ onSubmit }: FormProps*/) {
       if (isNaN(Number(value))){
         value = 0
       } else {
-        value = Math.max(minYear, Math.min(maxYear, Number(value)))
+        value = Math.max(minYear, Math.min(Number(getTodayYear), Number(value)))
       }
     }
 
@@ -76,137 +72,66 @@ function App(/*{ onSubmit }: FormProps*/) {
   
     setFormData({ ...formData, [name]: value })
   }
+
+  function handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    event.preventDefault()
+    console.log(event.target.value)
+    setFormData({ ...formData, ['genre']: Number(event.target.value) })
+  }
   
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
+
+    console.log(formData);
     
-    const responseForPages = await fetch('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc', options);
-    const jsonResponseForPages: any = await responseForPages.json()
-    const pages: number = jsonResponseForPages.total_pages
-    console.log(pages)
+    let fileteredFilms: IFilm[] = []
 
-    // let filmsPerPage: IFilm[] = []
-    // let filteredFilmsPerPage: IFilm[] = []
-
-    // for (let i = 1; i <= pages - 40040; i++) 
-    // {
-    //   const response = await fetch('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc&page='+i, options);
-    //   const findedMovies: any = await response.json()
-    //   filmsPerPage = findedMovies.results
-
-    //   const filteredFilmsByName: IFilm[] = filmsPerPage.filter((film) => {
-    //     if (
-    //       (formData.title === '') ||
-    //       (film.title.includes(formData.title))
-    //       ) {
-    //       console.log('passed by name')
-    //       return true
-    //     }
-    //     return false
-    //   })
-
-    //   filteredFilmsPerPage.push(...filteredFilmsByName)
-    // }
-    // setFilms(filteredFilmsPerPage)
-
-    let allFilms: IFilm[] = []
-
-    console.log("searching...")
-    console.log('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc'
-    +((formData.year !== 0) ? '&year='+String(formData.year) : '')
-    +((formData.rate !== 0) ? '&vote_average.gte='+formData.rate : ''))
-    for (let i = 1; i <= pages - 40110; i++) 
-    {
-      const response = await fetch(
-        'https://api.themoviedb.org/3/discover/movie?&page='+i+'&sort_by=primary_release_date.desc'
+    if (formData.title !== '') {
+      const filteredByNameResponse = await fetch(
+        'https://api.themoviedb.org/3/search/movie?'
+        +'&query='+String(formData.title)
         +((formData.year !== 0) ? '&year='+String(formData.year) : '')
-        +((formData.rate !== 0) ? '&vote_average.gte='+String(formData.rate) : ''),
+        +'&page=1'
+        +((formData.year !== 0) ? '&primary_release_year='+String(formData.year) : ''),
         options
       );
-      const findedMovies: any = await response.json()
-      allFilms.push(...findedMovies.results)
-    }
-    const filteredFilmsByName = allFilms.filter((film) => {
-      if (
-        (formData.title === '') ||
-        (film.title.includes(formData.title))
-        ) {
-        console.log('passed by name')
-        return true
+      const findedMovies: any = await filteredByNameResponse.json()
+      fileteredFilms.push(...findedMovies.results)
+      if (formData.rate !== 0) {
+        fileteredFilms = fileteredFilms.filter((film) => {
+          if ((film.vote_average >= formData.rate) && (film.vote_average < formData.rate + 1)) {
+            console.log('passed by rate')
+            return true
+          }
+          return false
+        })
       }
-      return false
-    })
-    console.log("fourth color!")
-
-    setFilms(filteredFilmsByName)
-
-      
-
-    // let filmsBlob = await (await fetch('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc', options)).blob()
-    
-    // const response = await fetch('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc', options);
-    // const findedMovies: any = await response.json()
-    // console.log(findedMovies.results);
-    // let movies: IFilm = findedMovies.result
-    
-    // console.log(filmsBlob)
-    // fetch('https://api.themoviedb.org/3/discover/movie?sort_by=primary_release_date.desc', options)
-    //   .then(response => response.json())
-    //   .then(response => setFilms(response.results))
-    //   .then(response => console.log(response))
-      // .then(() => {
-      //   const filteredFilmsByName = filmsList.filter((film) => {
-      //     if (
-      //       (formData.title === '') ||
-      //       (film.title.includes(formData.title))
-      //      ) {
-      //       console.log('passed by name')
-      //       return true
-      //     }
-      //     return false
-      //   })
-
-      //   setFilms(filteredFilmsByName)
-      // }
-      // )
-      // .catch(err => console.error(err));
-
-    // const filteredFilmsByName = filmsList.filter((film) => {
-    //   if (
-    //     (formData.title === '') ||
-    //     (film.title.includes(formData.title))
-    //    ) {
-    //     console.log('passed by name')
-    //     return true
-    //   }
-    //   return false
-    // })
-
-    // const filteredFilmsByRate = filteredFilmsByName.filter((film) => {
-    //   if (
-    //     ((formData.rateTo === 0) && (formData.rateFrom === 0)) ||
-    //     ((film.vote_average <= formData.rateTo) && (film.vote_average >= formData.rateFrom))
-    //   ) {
-    //     console.log('passed by rate')
-    //     return true
-    //   }
-    //   return false
-    // })
-
-    
-    // const filteredFilms = filteredFilmsByRate.filter((film) => {
-    //   const filmDate = new Date(film.release_date);
-    //   if (
-    //     ((formData.yearTo === 0) && (formData.yearFrom === 0)) ||
-    //     ((Number(filmDate.getFullYear()) <= formData.yearTo) && (Number(filmDate.getFullYear()) >= formData.yearFrom))
-    //   ) {
-    //     console.log('passed by year')
-    //     return true
-    //   }
-    //   return false
-    // })
-
-    // setFilms(filteredFilmsByName)
+      if (formData.genre !== 0) {
+        fileteredFilms = fileteredFilms.filter((film) => {
+          if (film.genre_ids.includes(formData.genre)) {
+            console.log('passed by henre')
+            return true
+          }
+          return false
+        })
+      }
+      setFilms(fileteredFilms)
+      return
+    } else {
+      const filteredByYearOrRateResponse = await fetch(
+        'https://api.themoviedb.org/3/discover/movie?&page=1'
+        +((formData.year === 0) ? '&release_date.lte='+getTodayYear : '')
+        +'&sort_by=primary_release_date.desc'
+        +((formData.year !== 0) ? '&year='+String(formData.year) : '')
+        +((formData.genre !== 0) ? '&with_genres='+String(formData.genre) : '')
+        +((formData.rate !== 0) ? '&vote_average.gte='+String(formData.rate)+'&vote_average.lte='+String(formData.rate+1) : ''),
+        options
+      );
+      const findedMovies: any = await filteredByYearOrRateResponse.json()
+      fileteredFilms.push(...findedMovies.results)
+      setFilms(fileteredFilms)
+      return
+    }
   }
 
   function handleFilmClick(event: React.MouseEvent<HTMLElement>) {
@@ -222,12 +147,10 @@ function App(/*{ onSubmit }: FormProps*/) {
   }
 
   function handleClear() {
-    // console.log(films)
     setFilms([])
-    // console.log(filmsList);
   }
 
-  // const ganres: Ganre[] = [
+  // const genres: Genre[] = [
   //   {
   //       "name" : "test",
   //       "id" : 1
@@ -266,9 +189,12 @@ function App(/*{ onSubmit }: FormProps*/) {
       }
       <form onSubmit={handleSubmit}>
         <input name="title" placeholder="Film name" onChange={handleInputChange} value={formData.title}/>
-        {/* <select>
-            {ganres.map(ganre => <option key={ganre.id}>{ganre.name}</option>) }
-        </select> */}
+        <select name="genre" onChange={handleSelectChange} value={formData.genre}>
+            <option value='0' disabled>
+              Choose one
+            </option>
+            {genres.map(genre => <option value={genre.id} key={genre.id}>{genre.name}</option>) }
+        </select>
         <div>
             Rating
             <input name="rate" /* placeholder="From" */ type='text' onChange={handleInputChange} value={formData.rate}/>
