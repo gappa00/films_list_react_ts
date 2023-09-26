@@ -1,20 +1,22 @@
-import React from "react";
-import { IFilm } from "../../models";
+import React from "react"
+import { IFilm } from "../../models"
 
-interface FilmsProps {
+interface FilmProps {
     film: IFilm
+    handleFilmClick: (params: any) => any
 }
 
-export function Film(props: FilmsProps) {
-    console.log(props)
+export const Film: React.FC<FilmProps> = (props) => {
     return (
         <div
-            key={props.film.id}
-            data-popularity={props.film.popularity}
-            data-release-date={props.film.release_date}
-            data-genre-ids={props.film.genre_ids}
+            className="b-film-item"
+            onClick={props.handleFilmClick}
+            id={String(props.film.id)}
         >
-            {props.film.title}
+            <div className="b-film-item__title">{props.film.title}</div><br/>
+            <div className="b-film-item__description">{props.film.overview}</div><br/>
+            <div className="b-film-item__vote-average">{props.film.vote_average}</div><br/>
+            <div className="b-film-item__release-date">{props.film.release_date}</div>
         </div>
     )
 }
