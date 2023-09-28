@@ -1,4 +1,5 @@
 import React, {useState, useEffect, DOMElement} from "react"
+import { useQuery, useMutation } from 'react-query';
 import { useNavigate } from "react-router-dom"
 import { Genre, IFilm } from "../../models"
 import { FormData } from "../../models"
@@ -9,6 +10,17 @@ interface FilterProps {
     sendFilmsList: (filmsList: IFilm[]) => any;
 } 
 
+interface searchByNameFilmsEntryVariables {
+    searchByNameFilmsName: string
+    searchByNameFilmsYear: number
+}
+
+interface searchByDateOrRateFilmsEntryVariables {
+    searchByDateOrRateFilmsYear: number
+    searchByDateOrRateFilmsRate: number
+    searchByDateOrRateFilmsGenre: number
+}
+
 const options = {
     method: 'GET',
     headers: {
@@ -17,25 +29,65 @@ const options = {
     }
 }
 
+function useGenres() {
+    return useQuery(
+        ['genres'],
+        async () => {
+        const res = await fetch('https://api.themoviedb.org/3/genre/movie/list', options)
+        return res.json()
+        }
+    )
+}
+
+const searchByNameFilms = async ({searchByNameFilmsName, searchByNameFilmsYear}: searchByNameFilmsEntryVariables) => {
+    const response = await fetch(
+        'https://api.themoviedb.org/3/search/movie?'
+        +'&query='+String(searchByNameFilmsName)
+        +((searchByNameFilmsYear !== 0) ? '&year='+String(searchByNameFilmsYear) : '')
+        +'&page=1'
+        +((searchByNameFilmsYear !== 0) ? '&primary_release_year='+String(searchByNameFilmsYear) : ''),
+        options
+    )
+    return response.json()
+}
+
+const today = new Date()
+const getTodayYear = today.toLocaleString("default", { year: "numeric" })
+
+const searchByDateOrRateFilms = async ({searchByDateOrRateFilmsYear, searchByDateOrRateFilmsRate, searchByDateOrRateFilmsGenre}: searchByDateOrRateFilmsEntryVariables) => {
+    const response = await fetch(
+        'https://api.themoviedb.org/3/discover/movie?&page=1'
+        +((searchByDateOrRateFilmsYear === 0) ? '&release_date.lte='+getTodayYear : '')
+        +'&sort_by=primary_release_date.desc'
+        +((searchByDateOrRateFilmsYear !== 0) ? '&year='+String(searchByDateOrRateFilmsYear) : '')
+        +((searchByDateOrRateFilmsGenre !== 0) ? '&with_genres='+String(searchByDateOrRateFilmsGenre) : '')
+        +((searchByDateOrRateFilmsRate !== 0) ? '&vote_average.gte='+String(searchByDateOrRateFilmsRate)+'&vote_average.lte='+String(searchByDateOrRateFilmsRate+1) : ''),
+        options
+    )
+    return response.json()
+}
+
 export const Filter: React.FC<FilterProps> = (props) => {
     const minRate = 0
     const maxRate = 10
     const minYear = 0
-    const today = new Date()
-    const getTodayYear = today.toLocaleString("default", { year: "numeric" })
+
     const navigate = useNavigate()
   
     const [genres, setGenres] = useState<Genre[]>([])
     const [innerFormData, setInnerFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 })
 
+    const { data: genresData } = useGenres()
+    const { mutateAsync: mutateSearchByName } = useMutation(searchByNameFilms);
+    const { mutateAsync: mutateSearchByRateOrDate } = useMutation(searchByDateOrRateFilms);
+
+
     useEffect(() => {
-    
-        fetch('https://api.themoviedb.org/3/genre/movie/list', options)
-        .then(response => response.json())
-        .then(response => setGenres(response.genres))
-        .catch(err => console.error(err))
-    
-    }, [])
+        console.log(genresData)
+        if(genresData) {
+            setGenres(genresData.genres);
+        }
+    }, [genresData])
     
       
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -80,52 +132,34 @@ export const Filter: React.FC<FilterProps> = (props) => {
         let fileteredFilms: IFilm[] = []
     
         if (innerFormData.title !== '') {
-          const filteredByNameResponse = await fetch(
-            'https://api.themoviedb.org/3/search/movie?'
-            +'&query='+String(innerFormData.title)
-            +((innerFormData.year !== 0) ? '&year='+String(innerFormData.year) : '')
-            +'&page=1'
-            +((innerFormData.year !== 0) ? '&primary_release_year='+String(innerFormData.year) : ''),
-            options
-          )
-          const findedMovies: any = await filteredByNameResponse.json()
-          fileteredFilms.push(...findedMovies.results)
-          if (innerFormData.rate !== 0) {
-            fileteredFilms = fileteredFilms.filter((film) => {
-              if ((film.vote_average >= innerFormData.rate) && (film.vote_average < innerFormData.rate + 1)) {
-                console.log('passed by rate')
-                return true
-              }
-              return false
-            })
-          }
-          if (innerFormData.genre !== 0) {
-            fileteredFilms = fileteredFilms.filter((film) => {
-              if (film.genre_ids.includes(innerFormData.genre)) {
-                console.log('passed by henre')
-                return true
-              }
-              return false
-            })
-          }
-          props.sendFilmsList(fileteredFilms)
-          return
+            const filmsByNameData = await mutateSearchByName({searchByNameFilmsName: innerFormData.title, searchByNameFilmsYear: innerFormData.year})
+            fileteredFilms.push(...filmsByNameData.results)
+            if (innerFormData.rate !== 0) {
+                fileteredFilms = fileteredFilms.filter((film) => {
+                  if ((film.vote_average >= innerFormData.rate) && (film.vote_average < innerFormData.rate + 1)) {
+                    console.log('passed by rate')
+                    return true
+                  }
+                  return false
+                })
+            }
+            if (innerFormData.genre !== 0) {
+                fileteredFilms = fileteredFilms.filter((film) => {
+                  if (film.genre_ids.includes(innerFormData.genre)) {
+                    console.log('passed by henre')
+                    return true
+                  }
+                  return false
+                })
+            }
+            props.sendFilmsList(fileteredFilms)
+            return
         } else {
-          const filteredByYearOrRateResponse = await fetch(
-            'https://api.themoviedb.org/3/discover/movie?&page=1'
-            +((innerFormData.year === 0) ? '&release_date.lte='+getTodayYear : '')
-            +'&sort_by=primary_release_date.desc'
-            +((innerFormData.year !== 0) ? '&year='+String(innerFormData.year) : '')
-            +((innerFormData.genre !== 0) ? '&with_genres='+String(innerFormData.genre) : '')
-            +((innerFormData.rate !== 0) ? '&vote_average.gte='+String(innerFormData.rate)+'&vote_average.lte='+String(innerFormData.rate+1) : ''),
-            options
-          )
-          const findedMovies: any = await filteredByYearOrRateResponse.json()
-          fileteredFilms.push(...findedMovies.results)
-          props.sendFilmsList(fileteredFilms)
-          return
+            const filteredByYearOrRateData = await mutateSearchByRateOrDate({searchByDateOrRateFilmsYear: innerFormData.year, searchByDateOrRateFilmsRate: innerFormData.rate, searchByDateOrRateFilmsGenre: innerFormData.genre})
+            fileteredFilms.push(...filteredByYearOrRateData.results)
+            props.sendFilmsList(fileteredFilms)
+            return
         }
-    
     }
 
     return (
