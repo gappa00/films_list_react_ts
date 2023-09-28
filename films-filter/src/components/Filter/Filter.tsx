@@ -1,11 +1,23 @@
-import React, {useState, useEffect, DOMElement} from "react"
+import React, {useState, useEffect, useRef} from "react"
 import { useQuery, useMutation } from 'react-query';
 import { useNavigate } from "react-router-dom"
 import { Genre, IFilm } from "../../models"
 import { FormData } from "../../models"
+import { Button, FormControl, FormLabel, Input, Select, Center, VStack } from "@chakra-ui/react";
+import styled from "@emotion/styled";
+
+const Form = styled.form`
+  background: transparent;
+  width: 100%;
+  border-radius: 3px;
+  margin: 0 1em;
+  padding: 0.25em 1em;
+  max-width: 1100px;
+`
 
 interface FilterProps {
     sendFormData: (formData: FormData) => any
+    formData?: FormData
     search: boolean
     sendFilmsList: (filmsList: IFilm[]) => any;
 } 
@@ -73,6 +85,8 @@ export const Filter: React.FC<FilterProps> = (props) => {
     const minYear = 0
 
     const navigate = useNavigate()
+
+    const formRef = useRef<HTMLFormElement>(null);
   
     const [genres, setGenres] = useState<Genre[]>([])
     const [innerFormData, setInnerFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 })
@@ -88,7 +102,17 @@ export const Filter: React.FC<FilterProps> = (props) => {
             setGenres(genresData.genres);
         }
     }, [genresData])
-    
+
+    useEffect(() => {
+        console.log(props.formData)
+        if(props.formData) {
+            setInnerFormData(props.formData);
+            const node = formRef.current
+            node?.dispatchEvent(
+                new Event("submit", { cancelable: true, bubbles: true })
+            );
+        }
+    }, [props.formData])
       
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
         const name = event.target.name
@@ -163,26 +187,35 @@ export const Filter: React.FC<FilterProps> = (props) => {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <input name="title" placeholder="Film name" onChange={handleInputChange} value={innerFormData.title}/>
-            <select name="genre" onChange={handleSelectChange} value={innerFormData.genre}>
-                <option value='0' disabled>
-                Choose one
-                </option>
-                {genres.map(genre => <option value={genre.id} key={genre.id}>{genre.name}</option>) }
-            </select>
-            <div>
-                Rating
-                <input name="rate" type='text' onChange={handleInputChange} value={innerFormData.rate}/>
-            </div>
-            <div>
-                Year
-                <input name="year" type='text' onChange={handleInputChange} value={innerFormData.year}/>
-            </div>
-            {props.search
-                ? <button onClick={() => navigate('two', { replace: false })} type="submit">Search</button>
-                : <button type="submit">Search</button>
-            }
-        </form>
+        <Center w='100%'>
+            <Form onSubmit={handleSubmit} ref={formRef}>
+                <VStack spacing='12px'>
+                    <FormControl>
+                        <FormLabel>Film Title</FormLabel>
+                        <Input name="title" placeholder="Film name" onChange={handleInputChange} value={innerFormData.title}/>
+                    </FormControl>
+                    <Select variant='filled' placeholder='Select genre' name="genre" onChange={handleSelectChange} value={innerFormData.genre}>
+                        <option value='0' disabled>
+                            Choose genre
+                        </option>
+                        {genres.map(genre => <option value={genre.id} key={genre.id}>{genre.name}</option>) }
+                    </Select>
+                    <FormControl>
+                        <FormLabel>Rating</FormLabel>
+                        <Input name="rate" type='text' onChange={handleInputChange} value={innerFormData.rate}/>
+                    </FormControl>
+                    <FormControl>
+                        <FormLabel>Year</FormLabel>
+                        <Input name="year" type='text' onChange={handleInputChange} value={innerFormData.year}/>
+                    </FormControl>
+                    {props.search
+                        ? <Button colorScheme='blue' onClick={() => navigate('two', { replace: false })} type="submit">
+                            Search
+                          </Button>
+                        : <Button colorScheme='blue' type="submit">Search</Button>
+                    }
+                </VStack>
+            </Form>
+        </Center>
     )
 }

@@ -4,6 +4,10 @@ import { IFilm } from './models';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { FormData } from './models';
 import { Filter } from './components/Filter/Filter';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { ChakraProvider, Flex } from '@chakra-ui/react'
+
+const queryClient = new QueryClient();
 
 function App() {
 	const [filmsList, setFilms] = useState<IFilm[]>([])
@@ -16,23 +20,44 @@ function App() {
 	function sendFilmsList(filmsList: IFilm[]) {
 		setFilms(filmsList)
 	}
-
+	
 	return (
-		<>
-		<BrowserRouter>
-			<Routes>
-			<Route path="" element={
-				<Filter sendFilmsList={sendFilmsList} sendFormData={sendFormData} search={true}/>
-			} />
-			<Route path="two" element={
-				<>
-				<Filter sendFilmsList={sendFilmsList} sendFormData={sendFormData} search={false}/>
-				<Filmslist list={filmsList}/>
-				</>
-			} />
-			</Routes>
-		</BrowserRouter>
-		</>
+		<ChakraProvider resetCSS={true}>
+			<QueryClientProvider client={queryClient}>
+				<BrowserRouter>
+					<Routes>
+						<Route path="" element={
+							<Filter
+								sendFilmsList={sendFilmsList}
+								sendFormData={sendFormData}
+								// formData={formData}
+								search={true}/>
+						} />
+						<Route path="two" element={
+							<>
+								<Flex 
+									bg="white"
+									zIndex={1}
+									pos='fixed'
+									w='100%'
+									borderBottom='1px solid var(--chakra-colors-blue-600)'
+								>
+									<Filter
+										sendFilmsList={sendFilmsList}
+										sendFormData={sendFormData}
+										formData={formData}
+										search={false}/>
+								</Flex>
+								
+								<Flex justify='center'>
+									<Filmslist list={filmsList}/>
+								</Flex>
+							</>
+						} />
+					</Routes>
+				</BrowserRouter>
+			</QueryClientProvider>
+		</ChakraProvider>
 	);
 }
 
