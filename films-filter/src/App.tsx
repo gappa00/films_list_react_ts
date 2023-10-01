@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Filmslist } from './components/Filmslist/Filmslist';
-import { IFilm, Genre } from './models';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { FormData } from './models';
-import { Filter } from './components/Filter/Filter';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import React, { useState, useEffect } from 'react'
+import { Filmslist } from './components/Filmslist/Filmslist'
+import { IFilm, Genre } from './models'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { FormData } from './models'
+import { Filter } from './components/Filter/Filter'
+import { QueryClient, QueryClientProvider } from 'react-query'
 import { ChakraProvider, Flex } from '@chakra-ui/react'
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient()
 
 function App() {
 	const [filmsList, setFilms] = useState<IFilm[]>([])
@@ -65,7 +65,7 @@ function App() {
 				</BrowserRouter>
 			</QueryClientProvider>
 		</ChakraProvider>
-	);
+	)
 }
 
-export default App;
+export default App

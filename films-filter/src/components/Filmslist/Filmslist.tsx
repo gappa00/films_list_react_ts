@@ -1,8 +1,8 @@
-import React, {useState, useRef} from "react";
-import { Film } from "../Film/Film";
-import { IFilm, Genre } from "../../models";
-import { FilmBlock } from "../FilmBlock/FilmBlock";
-import { Center, VStack, useDisclosure, Box } from "@chakra-ui/react";
+import React, {useState, useRef} from "react"
+import { Film } from "../Film/Film"
+import { IFilm, Genre } from "../../models"
+import { FilmBlock } from "../FilmBlock/FilmBlock"
+import { Center, VStack, useDisclosure, Box } from "@chakra-ui/react"
 import {
     Drawer,
     DrawerBody,

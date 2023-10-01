@@ -1,10 +1,10 @@
 import React, {useState, useEffect, useRef} from "react"
-import { useQuery, useMutation } from 'react-query';
+import { useQuery, useMutation } from 'react-query'
 import { useNavigate } from "react-router-dom"
 import { Genre, IFilm } from "../../models"
 import { FormData } from "../../models"
-import { Button, FormControl, FormLabel, Input, Select, Center, VStack } from "@chakra-ui/react";
-import styled from "@emotion/styled";
+import { Button, FormControl, FormLabel, Input, Select, Center, VStack } from "@chakra-ui/react"
+import styled from "@emotion/styled"
 
 const Form = styled.form`
   background: transparent;
@@ -20,7 +20,7 @@ interface FilterProps {
     sendGenresGlobal: (genresData: Genre[]) => any
     formData?: FormData
     search: boolean
-    sendFilmsList: (filmsList: IFilm[]) => any;
+    sendFilmsList: (filmsList: IFilm[]) => any
 } 
 
 interface searchByNameFilmsEntryVariables {
@@ -87,30 +87,30 @@ export const Filter: React.FC<FilterProps> = (props) => {
 
     const navigate = useNavigate()
 
-    const formRef = useRef<HTMLFormElement>(null);
+    const formRef = useRef<HTMLFormElement>(null)
   
     const [genres, setGenres] = useState<Genre[]>([])
     const [innerFormData, setInnerFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 })
 
     const { data: genresData } = useGenres()
-    const { mutateAsync: mutateSearchByName } = useMutation(searchByNameFilms);
-    const { mutateAsync: mutateSearchByRateOrDate } = useMutation(searchByDateOrRateFilms);
+    const { mutateAsync: mutateSearchByName } = useMutation(searchByNameFilms)
+    const { mutateAsync: mutateSearchByRateOrDate } = useMutation(searchByDateOrRateFilms)
 
 
     useEffect(() => {
         if(genresData) {
-            setGenres(genresData.genres);
+            setGenres(genresData.genres)
             props.sendGenresGlobal(genresData.genres)
         }
     }, [genresData])
 
     useEffect(() => {
         if(props.formData) {
-            setInnerFormData(props.formData);
+            setInnerFormData(props.formData)
             const node = formRef.current
             node?.dispatchEvent(
                 new Event("submit", { cancelable: true, bubbles: true })
-            );
+            )
         }
     }, [props.formData])
       

@@ -1,6 +1,6 @@
-import React from "react";
-import { IFilm, Genre } from "../../models";
-import { Box, Image, Heading, Stack, StackDivider, Text } from "@chakra-ui/react";
+import React from "react"
+import { IFilm, Genre } from "../../models"
+import { Box, Image, Heading, Stack, StackDivider, Text } from "@chakra-ui/react"
 
 interface FilmBlockProps {
 	filmBlock: IFilm[]
@@ -32,7 +32,7 @@ export const FilmBlock: React.FC<FilmBlockProps> = (props) => {
 						}
 						return false
 					  })
-					return singleGenre.map((genre: { name: string; }) => genre.name) + (i < filmItem.genre_ids.length - 1 ? ', ' : '')
+					return singleGenre.map((genre: { name: string }) => genre.name) + (i < filmItem.genre_ids.length - 1 ? ', ' : '')
 				})}
 			</Text>
 			{filmItem.overview &&
