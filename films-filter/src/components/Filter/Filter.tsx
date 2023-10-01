@@ -17,6 +17,7 @@ const Form = styled.form`
 
 interface FilterProps {
     sendFormData: (formData: FormData) => any
+    sendGenresGlobal: (genresData: Genre[]) => any
     formData?: FormData
     search: boolean
     sendFilmsList: (filmsList: IFilm[]) => any;
@@ -97,14 +98,13 @@ export const Filter: React.FC<FilterProps> = (props) => {
 
 
     useEffect(() => {
-        console.log(genresData)
         if(genresData) {
             setGenres(genresData.genres);
+            props.sendGenresGlobal(genresData.genres)
         }
     }, [genresData])
 
     useEffect(() => {
-        console.log(props.formData)
         if(props.formData) {
             setInnerFormData(props.formData);
             const node = formRef.current
@@ -115,6 +115,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
     }, [props.formData])
       
     function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+        event.preventDefault()
         const name = event.target.name
         let value: string | number = event.target.value
     
@@ -134,8 +135,6 @@ export const Filter: React.FC<FilterProps> = (props) => {
           }
         }
     
-        console.log(name)
-        console.log(value)
 
         setInnerFormData({ ...innerFormData, [name]: value })
         props.sendFormData({ ...innerFormData, [name]: value })
@@ -143,15 +142,12 @@ export const Filter: React.FC<FilterProps> = (props) => {
     
     function handleSelectChange(event: React.ChangeEvent<HTMLSelectElement>) {
         event.preventDefault()
-        console.log(event.target.value)
         setInnerFormData({ ...innerFormData, ['genre']: Number(event.target.value) })
         props.sendFormData({ ...innerFormData, ['genre']: Number(event.target.value) })
     }
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
-    
-        console.log(innerFormData)
         
         let fileteredFilms: IFilm[] = []
     
@@ -161,7 +157,6 @@ export const Filter: React.FC<FilterProps> = (props) => {
             if (innerFormData.rate !== 0) {
                 fileteredFilms = fileteredFilms.filter((film) => {
                   if ((film.vote_average >= innerFormData.rate) && (film.vote_average < innerFormData.rate + 1)) {
-                    console.log('passed by rate')
                     return true
                   }
                   return false
@@ -170,7 +165,6 @@ export const Filter: React.FC<FilterProps> = (props) => {
             if (innerFormData.genre !== 0) {
                 fileteredFilms = fileteredFilms.filter((film) => {
                   if (film.genre_ids.includes(innerFormData.genre)) {
-                    console.log('passed by henre')
                     return true
                   }
                   return false
@@ -187,7 +181,7 @@ export const Filter: React.FC<FilterProps> = (props) => {
     }
 
     return (
-        <Center w='100%'>
+        <Center w='100%' paddingLeft={'calc(100vw - 100%)'}>
             <Form onSubmit={handleSubmit} ref={formRef}>
                 <VStack spacing='12px'>
                     <FormControl>
@@ -195,9 +189,6 @@ export const Filter: React.FC<FilterProps> = (props) => {
                         <Input name="title" placeholder="Film name" onChange={handleInputChange} value={innerFormData.title}/>
                     </FormControl>
                     <Select variant='filled' placeholder='Select genre' name="genre" onChange={handleSelectChange} value={innerFormData.genre}>
-                        <option value='0' disabled>
-                            Choose genre
-                        </option>
                         {genres.map(genre => <option value={genre.id} key={genre.id}>{genre.name}</option>) }
                     </Select>
                     <FormControl>

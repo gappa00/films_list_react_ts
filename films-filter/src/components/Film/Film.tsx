@@ -1,6 +1,6 @@
 import React from "react"
 import { IFilm } from "../../models"
-import { Card, CardHeader, CardBody, CardFooter, Text, Heading, Stack, StackDivider, Box } from '@chakra-ui/react'
+import { Card, CardBody, Text, Heading, Stack, StackDivider, Box } from '@chakra-ui/react'
 
 interface FilmProps {
     film: IFilm
@@ -22,22 +22,22 @@ export const Film: React.FC<FilmProps> = (props) => {
             <CardBody>
                 <Stack divider={<StackDivider />} spacing='10px'>
                     <Box>
-                        <Heading className="b-film-item__title">
+                        <Heading>
                             {props.film.title}
                         </Heading>
                     </Box>
                     <Box>
-                        <Text className="b-film-item__description">
+                        <Text>
                             {props.film.overview}
                         </Text>
                     </Box>
                     <Box>
-                        <Text color='blue.600' fontSize='2xl' className="b-film-item__vote-average">
+                        <Text color='blue.600' fontSize='2xl'>
                             Rating: {props.film.vote_average}
                         </Text>
                     </Box>
                     <Box>
-                        <div className="b-film-item__release-date">
+                        <div>
                             Release date: {props.film.release_date}
                         </div>
                     </Box>

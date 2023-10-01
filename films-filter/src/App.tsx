@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Filmslist } from './components/Filmslist/Filmslist';
-import { IFilm } from './models';
+import { IFilm, Genre } from './models';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { FormData } from './models';
 import { Filter } from './components/Filter/Filter';
@@ -11,10 +11,15 @@ const queryClient = new QueryClient();
 
 function App() {
 	const [filmsList, setFilms] = useState<IFilm[]>([])
-	const [formData, setFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 });
+	const [formData, setFormData] = React.useState<FormData>({ title: '', rate: 0, year: 0, genre: 0 })
+	const [genresGlobal, setGenresGlobal] = useState<Genre[]>([])
 
 	function sendFormData(formData: FormData) {
 		setFormData(formData)
+	}
+
+	function sendGenresGlobal(genresGlobal: Genre[]) {
+		setGenresGlobal(genresGlobal)
 	}
 
 	function sendFilmsList(filmsList: IFilm[]) {
@@ -30,6 +35,7 @@ function App() {
 							<Filter
 								sendFilmsList={sendFilmsList}
 								sendFormData={sendFormData}
+								sendGenresGlobal={sendGenresGlobal}
 								// formData={formData}
 								search={true}/>
 						} />
@@ -45,12 +51,13 @@ function App() {
 									<Filter
 										sendFilmsList={sendFilmsList}
 										sendFormData={sendFormData}
+										sendGenresGlobal={sendGenresGlobal}
 										formData={formData}
 										search={false}/>
 								</Flex>
 								
 								<Flex justify='center'>
-									<Filmslist list={filmsList}/>
+									<Filmslist list={filmsList} genres={genresGlobal}/>
 								</Flex>
 							</>
 						} />
